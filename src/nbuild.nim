@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 07:34:36 kmodi>
+# Time-stamp: <2018-05-17 07:35:41 kmodi>
 # Generic build script
 
 import os                       #for paramCount, commandLineParams, sleep, fileExists
@@ -10,18 +10,18 @@ type
   ShellCmdError* = object of Exception
 
 let
-  STOW_PKGS_ROOT :string = getEnv("STOW_PKGS_ROOT")
-  STOW_PKGS_TARGET :string = getEnv("STOW_PKGS_TARGET")
+  STOW_PKGS_ROOT: string = getEnv("STOW_PKGS_ROOT")
+  STOW_PKGS_TARGET: string = getEnv("STOW_PKGS_TARGET")
 
 var
-  installDir :string
+  installDir: string
 
-template execShellCmdSafe(cmd :string) =
-  var exitStatus :int = execShellCmd(cmd)
+template execShellCmdSafe(cmd: string) =
+  var exitStatus: int = execShellCmd(cmd)
   if exitStatus>0:
     raise newException(ShellCmdError, "Failed to execute " & cmd)
 
-proc gitOps(rev :string, revBase :string, debug :bool) =
+proc gitOps(rev: string, revBase: string, debug: bool) =
   ## Git fetch, checkout and hard reset
   if debug: echo "git ops"
   execShellCmdSafe("git fetch --all")
@@ -35,10 +35,10 @@ proc waitQuitHandler() {.noconv.} =
   echo " .. Installation canceled"
   quit 0
 
-proc wait(seconds :int=5, debug :bool) =
+proc wait(seconds: int=5, debug: bool) =
   ## Wait countdown
   var
-    cnt :int = seconds
+    cnt: int = seconds
 
   # https://rosettacode.org/wiki/Handle_a_signal#Nim
   setControlCHook(waitQuitHandler)
@@ -50,14 +50,14 @@ proc wait(seconds :int=5, debug :bool) =
     if cnt>0:
       cursorUp(stdout); eraseLine(stdout) #similar to printf"\\r" in bash
 
-proc setInstallDir(pkg :string, versionDir :string, debug :bool) =
+proc setInstallDir(pkg: string, versionDir: string, debug: bool) =
   if dirExists(STOW_PKGS_ROOT):
     installDir = STOW_PKGS_ROOT / pkg / versionDir
     if debug: echo "install dir = " & installDir
   else:
     raise newException(OSError, "Directory " & STOW_PKGS_ROOT & " does not exist")
 
-proc make(pkg :string, debug :bool) =
+proc make(pkg: string, debug: bool) =
   ## Make
   if debug: echo "make"
   if fileExists("."/"Makefile"): #https://devdocs.io/nim/ospaths#/,string,string
@@ -78,24 +78,24 @@ proc make(pkg :string, debug :bool) =
   execShellCmdSafe("."/"configure --prefix=" & installDir)
   execShellCmdSafe("make")
 
-proc makeInstall(pkg :string, debug :bool) =
+proc makeInstall(pkg: string, debug: bool) =
   ## Make install
   echo fmt"Installing {pkg} at {installDir} .."
   createDir(installDir)
   execShellCmdSafe("make install")
 
-proc cleanup(debug :bool) =
+proc cleanup(debug: bool) =
   ## Cleanup
   if debug: echo "cleanup"
   execShellCmdSafe("make clean")
 
-proc nbuild(pkg :string
-            , rev :string="origin/master"
-            , GitSkip :bool=false
-            , WaitSkip :bool=false
-            , InstallSkip :bool=false
-            , keep :bool=false
-            , debug :bool=false) =
+proc nbuild(pkg: string
+            , rev: string="origin/master"
+            , GitSkip: bool=false
+            , WaitSkip: bool=false
+            , InstallSkip: bool=false
+            , keep: bool=false
+            , debug: bool=false) =
   ##NBuild: General purpose build script
   var
     revBase: string = rev.splitPath[1] #similar to basename in bash
