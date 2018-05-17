@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 15:24:29 kmodi>
+# Time-stamp: <2018-05-17 15:59:59 kmodi>
 # Generic build script
 
 import os, strformat, terminal, parsetoml, tables
@@ -66,7 +66,7 @@ proc ctrlCHandler() {.noconv.} =
   echo " .. Installation canceled"
   quit 0
 
-proc wait(limit: int=5, debug: bool) =
+proc wait(limit: int = 5, debug: bool) =
   ## Wait countdown
   if debug: echo "-> [DBG] Entering wait"
   for cnt in 0 ..< limit:
@@ -123,12 +123,12 @@ proc cleanup(debug: bool) =
   execShellCmdSafe("make clean")
 
 proc nbuild(pkg: string
-            , rev: string="origin/master"
-            , gitSkip: bool=false
-            , waitSkip: bool=false
-            , installSkip: bool=false
-            , keep: bool=false
-            , debug: bool=false) =
+            , rev: string = "origin/master"
+            , gitSkip: bool = false
+            , waitSkip: bool = false
+            , installSkip: bool = false
+            , keep: bool = false
+            , debug: bool = false) =
   ##NBuild: General purpose build script
   let
     revBase = rev.splitPath[1] #similar to basename in bash
@@ -147,7 +147,7 @@ proc nbuild(pkg: string
     if cwdIsGitRepo and (not gitSkip):
       gitOps(rev, revBase, debug)
       if (not waitSkip):
-        wait(debug=debug)
+        wait(debug = debug)
     make(pkg, debug)
     if (not installSkip):
       makeInstall(pkg, debug)
