@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 08:01:51 kmodi>
+# Time-stamp: <2018-05-17 08:04:14 kmodi>
 # Generic build script
 
 import os                       #for paramCount, commandLineParams, sleep, fileExists
@@ -19,7 +19,7 @@ var
   installDir: string
 
 template execShellCmdSafe(cmd: string) =
-  var exitStatus: int = execShellCmd(cmd)
+  var exitStatus = execShellCmd(cmd)
   if exitStatus > 0:
     raise newException(ShellCmdError, "Failed to execute " & cmd)
 
@@ -48,8 +48,7 @@ proc waitQuitHandler() {.noconv.} =
 
 proc wait(seconds: int=5, debug: bool) =
   ## Wait countdown
-  var
-    cnt: int = seconds
+  var cnt = seconds
 
   # https://rosettacode.org/wiki/Handle_a_signal#Nim
   setControlCHook(waitQuitHandler)
@@ -108,8 +107,7 @@ proc nbuild(pkg: string
             , keep: bool=false
             , debug: bool=false) =
   ##NBuild: General purpose build script
-  var
-    revBase: string = rev.splitPath[1] #similar to basename in bash
+  var revBase = rev.splitPath[1] #similar to basename in bash
   if debug: echo rev
   if debug: echo rev_base
 
