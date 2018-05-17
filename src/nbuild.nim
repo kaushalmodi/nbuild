@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 10:33:34 kmodi>
+# Time-stamp: <2018-05-17 10:38:18 kmodi>
 # Generic build script
 
 # It would be simple to just do:
@@ -60,15 +60,13 @@ proc ctrlCHandler() {.noconv.} =
   echo " .. Installation canceled"
   quit 0
 
-proc wait(seconds: int=5, debug: bool) =
+proc wait(limit: int=5, debug: bool) =
   ## Wait countdown
-  var cnt = seconds
 
-  while cnt > 0:
-    echo fmt"Waiting for {cnt} second(s) .. Press Ctrl+C to cancel this installation."
+  for cnt in 0 ..< limit:
+    echo fmt"Waiting for {limit-cnt} second(s) .. Press Ctrl+C to cancel this installation."
     sleep(1000)                 #1 second
-    cnt = cnt - 1
-    if cnt > 0:
+    if cnt < limit:
       cursorUp(stdout); eraseLine(stdout) #similar to printf"\\r" in bash
 
 proc make(pkg: string, debug: bool) =
