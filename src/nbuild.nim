@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 11:04:11 kmodi>
+# Time-stamp: <2018-05-17 11:09:29 kmodi>
 # Generic build script
 
 # It would be simple to just do:
@@ -134,17 +134,17 @@ proc nbuild(pkg: string
 
 when isMainModule:
   import cligen
-  dispatch(nbuild,
-           help = {"pkg" : "Name of the package being installed\nExamples: 'nim', 'emacs', 'tmux'"
-                    , "rev" : "Revision (git remote branch or tag) of the package begin installed\nExamples: 'origin/devel', '2.7'"
-                    , "gitSkip" : "Skip all git operations in the beginning: fetching and hard reset"
-                    , "waitSkip" : "Skip the countdown before the start of build"
-                    , "installSkip" : "Skip the installation of the package after the build step"
-                    , "keep" : "Keep the built files in the current directory after the installation step"
-                    , "debug" : "Enable printing statements useful for debug"
-                  },
-           short = {"gitSkip" : 'G'
-                     , "waitSkip" : 'W'
-                     , "installSkip" : 'I'
-                     , "debug" : 'D'
+  dispatch(nbuild
+           , help = {"pkg" : "Name of the package being installed\nExamples: 'nim', 'emacs', 'tmux'"
+                      , "rev" : "Revision (git remote branch or tag) of the package begin installed\nExamples: 'origin/devel', '2.7'"
+                      , "gitSkip" : "Skip all git operations in the beginning: fetching and hard reset"
+                      , "waitSkip" : "Skip the countdown before the start of build"
+                      , "installSkip" : "Skip the installation of the package after the build step"
+                      , "keep" : "Keep the built files in the current directory after the installation step"
+                      , "debug" : "Enable printing statements useful for debug"
+                    }
+           , short = {"gitSkip" : 'G'
+                      , "waitSkip" : 'W'
+                      , "installSkip" : 'I'
+                      , "debug" : 'D'
                      })
