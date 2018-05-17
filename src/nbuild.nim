@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 10:38:18 kmodi>
+# Time-stamp: <2018-05-17 11:04:11 kmodi>
 # Generic build script
 
 # It would be simple to just do:
@@ -102,9 +102,9 @@ proc cleanup(debug: bool) =
 
 proc nbuild(pkg: string
             , rev: string="origin/master"
-            , GitSkip: bool=false
-            , WaitSkip: bool=false
-            , InstallSkip: bool=false
+            , gitSkip: bool=false
+            , waitSkip: bool=false
+            , installSkip: bool=false
             , keep: bool=false
             , debug: bool=false) =
   ##NBuild: General purpose build script
@@ -117,12 +117,12 @@ proc nbuild(pkg: string
 
   try:
     setVars(pkg, revBase, debug)
-    if (not GitSkip):
+    if (not gitSkip):
       gitOps(rev, revBase, debug)
-    if (not WaitSkip):
+    if (not waitSkip):
       wait(debug=debug)
     make(pkg, debug)
-    if (not InstallSkip):
+    if (not installSkip):
       makeInstall(pkg, debug)
       if (not keep):
         cleanup(debug)
@@ -134,4 +134,17 @@ proc nbuild(pkg: string
 
 when isMainModule:
   import cligen
-  dispatch(nbuild)
+  dispatch(nbuild,
+           help = {"pkg" : "Name of the package being installed\nExamples: 'nim', 'emacs', 'tmux'"
+                    , "rev" : "Revision (git remote branch or tag) of the package begin installed\nExamples: 'origin/devel', '2.7'"
+                    , "gitSkip" : "Skip all git operations in the beginning: fetching and hard reset"
+                    , "waitSkip" : "Skip the countdown before the start of build"
+                    , "installSkip" : "Skip the installation of the package after the build step"
+                    , "keep" : "Keep the built files in the current directory after the installation step"
+                    , "debug" : "Enable printing statements useful for debug"
+                  },
+           short = {"gitSkip" : 'G'
+                     , "waitSkip" : 'W'
+                     , "installSkip" : 'I'
+                     , "debug" : 'D'
+                     })
