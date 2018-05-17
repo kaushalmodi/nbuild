@@ -24,9 +24,8 @@ template execShellCmdSafe(cmd: string) =
     raise newException(ShellCmdError, "Failed to execute " & cmd)
 
 proc setVars(pkg: string, versionDir: string, debug: bool) =
-  # https://devdocs.io/nim/strformat#fmt.t,string
-  # Need to put escape sequences like \n as below inside fmt: {'\n'}
   if debug:
+    echo "-> [DBG] Entering setVars"
     echo fmt"nbuild config ({configFile}):"
     parsetoml.dump(cfg)
     echo fmt"hasKey({pkg}): {cfg.hasKey(pkg)}"
@@ -55,7 +54,7 @@ proc setVars(pkg: string, versionDir: string, debug: bool) =
 
 proc gitOps(rev: string, revBase: string, debug: bool) =
   ## Git fetch, checkout and hard reset
-  if debug: echo "git ops"
+  if debug: echo "-> [DBG] Entering gitOps"
   execShellCmdSafe("git fetch --all")
   execShellCmdSafe(fmt"git checkout {revBase}")
   execShellCmdSafe("git fetch --all")
@@ -69,7 +68,7 @@ proc ctrlCHandler() {.noconv.} =
 
 proc wait(limit: int=5, debug: bool) =
   ## Wait countdown
-
+  if debug: echo "-> [DBG] Entering wait"
   for cnt in 0 ..< limit:
     echo fmt"Waiting for {limit-cnt} second(s) .. Press Ctrl+C to cancel this installation."
     sleep(1000)                 #1 second
@@ -78,8 +77,8 @@ proc wait(limit: int=5, debug: bool) =
 
 proc make(pkg: string, debug: bool) =
   ## Make
-  if debug: echo "make"
   if fileExists("."/"Makefile"): #https://devdocs.io/nim/ospaths#/,string,string
+  if debug: echo "-> [DBG] Entering make"
     execShellCmdSafe("make clean")
   echo "Running autogen.sh .."
   execShellCmdSafe("."/"autogen.sh")
@@ -103,13 +102,14 @@ proc make(pkg: string, debug: bool) =
 
 proc makeInstall(pkg: string, debug: bool) =
   ## Make install
+  if debug: echo "-> [DBG] Entering makeInstall"
   echo fmt"Installing {pkg} at {installDir} .."
   createDir(installDir)
   execShellCmdSafe("make install")
 
 proc cleanup(debug: bool) =
   ## Cleanup
-  if debug: echo "cleanup"
+  if debug: echo "-> [DBG] Entering cleanup"
   execShellCmdSafe("make clean")
 
 proc nbuild(pkg: string
