@@ -111,8 +111,8 @@ proc nbuild(pkg: string
             , debug: bool=false) =
   ##NBuild: General purpose build script
   let revBase = rev.splitPath[1] #similar to basename in bash
-  if debug: echo rev
-  if debug: echo revBase
+  if debug: echo "rev = ", rev
+  if debug: echo "revBase = ", revBase
 
   # https://rosettacode.org/wiki/Handle_a_signal#Nim
   setControlCHook(ctrlCHandler)
