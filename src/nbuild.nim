@@ -56,16 +56,13 @@ proc gitOps(rev: string, revBase: string, debug: bool) =
 
 # https://rosettacode.org/wiki/Handle_a_signal#Nim
 # Wed May 16 18:28:02 EDT 2018 - kmodi - What does {.noconv.} do?
-proc waitQuitHandler() {.noconv.} =
+proc ctrlCHandler() {.noconv.} =
   echo " .. Installation canceled"
   quit 0
 
 proc wait(seconds: int=5, debug: bool) =
   ## Wait countdown
   var cnt = seconds
-
-  # https://rosettacode.org/wiki/Handle_a_signal#Nim
-  setControlCHook(waitQuitHandler)
 
   while cnt > 0:
     echo fmt"Waiting for {cnt} second(s) .. Press Ctrl+C to cancel this installation."
@@ -116,6 +113,9 @@ proc nbuild(pkg: string
   let revBase = rev.splitPath[1] #similar to basename in bash
   if debug: echo rev
   if debug: echo revBase
+
+  # https://rosettacode.org/wiki/Handle_a_signal#Nim
+  setControlCHook(ctrlCHandler)
 
   try:
     setVars(pkg, revBase, debug)
