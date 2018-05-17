@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 08:04:14 kmodi>
+# Time-stamp: <2018-05-17 08:08:05 kmodi>
 # Generic build script
 
 import os                       #for paramCount, commandLineParams, sleep, fileExists
@@ -77,7 +77,7 @@ proc make(pkg: string, debug: bool) =
 
   # Wed May 16 22:49:48 EDT 2018 - kmodi
   # TODO: Get pkg-specific configure values from a separate config file,
-  # preferable TOML.
+  # preferably TOML.
   if pkg == "tmux":
     if dirExists(stowPkgsTarget):
       putEnv("CFLAGS", fmt"-fgnu89-inline -I{stowPkgsTarget}/include -I{stowPkgsTarget}/include/ncursesw")
