@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-16 23:08:03 kmodi>
+# Time-stamp: <2018-05-17 07:34:36 kmodi>
 # Generic build script
 
 import os                       #for paramCount, commandLineParams, sleep, fileExists
@@ -115,7 +115,7 @@ proc nbuild(pkg :string
         cleanup(debug)
     echo "Done!"
   except ShellCmdError:
-    echo "Git error: " & getCurrentExceptionMsg()
+    echo "Shell command error: " & getCurrentExceptionMsg()
   except:
     echo "Error happened: " & getCurrentExceptionMsg()
 
