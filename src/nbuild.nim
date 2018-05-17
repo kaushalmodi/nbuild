@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 07:59:47 kmodi>
+# Time-stamp: <2018-05-17 08:01:51 kmodi>
 # Generic build script
 
 import os                       #for paramCount, commandLineParams, sleep, fileExists
@@ -20,7 +20,7 @@ var
 
 template execShellCmdSafe(cmd: string) =
   var exitStatus: int = execShellCmd(cmd)
-  if exitStatus>0:
+  if exitStatus > 0:
     raise newException(ShellCmdError, "Failed to execute " & cmd)
 
 proc envVarCheck(pkg: string, debug: bool) =
@@ -54,11 +54,11 @@ proc wait(seconds: int=5, debug: bool) =
   # https://rosettacode.org/wiki/Handle_a_signal#Nim
   setControlCHook(waitQuitHandler)
 
-  while cnt>0:
+  while cnt > 0:
     echo fmt"Waiting for {cnt} second(s) .. Press Ctrl+C to cancel this installation."
     sleep(1000)                 #1 second
     cnt = cnt - 1
-    if cnt>0:
+    if cnt > 0:
       cursorUp(stdout); eraseLine(stdout) #similar to printf"\\r" in bash
 
 proc setInstallDir(pkg: string, versionDir: string, debug: bool) =
@@ -79,7 +79,7 @@ proc make(pkg: string, debug: bool) =
   # Wed May 16 22:49:48 EDT 2018 - kmodi
   # TODO: Get pkg-specific configure values from a separate config file,
   # preferable TOML.
-  if pkg=="tmux":
+  if pkg == "tmux":
     if dirExists(stowPkgsTarget):
       putEnv("CFLAGS", fmt"-fgnu89-inline -I{stowPkgsTarget}/include -I{stowPkgsTarget}/include/ncursesw")
       putEnv("LDFLAGS", fmt"-L{stowPkgsTarget}/lib")
