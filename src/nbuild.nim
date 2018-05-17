@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 14:39:17 kmodi>
+# Time-stamp: <2018-05-17 15:07:33 kmodi>
 # Generic build script
 
 import os, strformat, terminal, parsetoml, tables
@@ -120,19 +120,24 @@ proc nbuild(pkg: string
             , keep: bool=false
             , debug: bool=false) =
   ##NBuild: General purpose build script
-  let revBase = rev.splitPath[1] #similar to basename in bash
-  if debug: echo "rev = ", rev
-  if debug: echo "revBase = ", revBase
+  let
+    revBase = rev.splitPath[1] #similar to basename in bash
+    cwdIsGitRepo = existsDir("."/".git")
+
+  if debug:
+    echo "rev = ", rev
+    echo "revBase = ", revBase
+    echo "Is current dir a git repo? ", cwdIsGitRepo
 
   # https://rosettacode.org/wiki/Handle_a_signal#Nim
   setControlCHook(ctrlCHandler)
 
   try:
     setVars(pkg, revBase, debug)
-    if (not gitSkip):
+    if cwdIsGitRepo and (not gitSkip):
       gitOps(rev, revBase, debug)
-    if (not waitSkip):
-      wait(debug=debug)
+      if (not waitSkip):
+        wait(debug=debug)
     make(pkg, debug)
     if (not installSkip):
       makeInstall(pkg, debug)
