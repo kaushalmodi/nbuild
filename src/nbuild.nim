@@ -1,5 +1,5 @@
 
-# Time-stamp: <2018-05-17 14:25:30 kmodi>
+# Time-stamp: <2018-05-17 14:29:40 kmodi>
 # Generic build script
 
 # It would be simple to just do:
@@ -55,9 +55,8 @@ proc setVars(pkg: string, versionDir: string, debug: bool) =
   if debug: echo "install dir = " & installDir
 
   if cfg.hasKey(pkg):
-    var dirEnvVars: seq[string]
     try:
-      dirEnvVars = cfg.getStringArray(fmt"{pkg}.dir_env_vars")
+      let dirEnvVars = cfg.getStringArray(fmt"{pkg}.dir_env_vars")
       for dirEnvVar in dirEnvVars:
         let dir = getEnv(dirEnvVar)
         if dir == "":
