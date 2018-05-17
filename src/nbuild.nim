@@ -1,9 +1,18 @@
-# Time-stamp: <2018-05-17 10:19:48 kmodi>
+# Time-stamp: <2018-05-17 10:33:34 kmodi>
 # Generic build script
 
-import os                       #for paramCount, commandLineParams, sleep, fileExists
-import strformat                #for fmt
-import terminal                 #for eraseLine
+# It would be simple to just do:
+#
+#   import os, strformat, terminal
+#
+# Note that ospaths gets imported implicitly in this case.
+# But I am still doing the below here so that so that I realize the number of
+# procs that I am using, and also where they come from.
+from os import paramCount, commandLineParams, sleep, fileExists, dirExists, createDir, execShellCmd
+from ospaths import getEnv, putEnv, `/`, splitPath
+from strformat import fmt
+from terminal import cursorUp, eraseLine
+# import os, strformat, terminal # Concise way to do the above
 
 # Custom exception: https://forum.nim-lang.org/t/2863/1#17817
 type
