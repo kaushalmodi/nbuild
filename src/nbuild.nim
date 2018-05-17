@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 08:08:05 kmodi>
+# Time-stamp: <2018-05-17 10:19:48 kmodi>
 # Generic build script
 
 import os                       #for paramCount, commandLineParams, sleep, fileExists
@@ -23,13 +23,18 @@ template execShellCmdSafe(cmd: string) =
   if exitStatus > 0:
     raise newException(ShellCmdError, "Failed to execute " & cmd)
 
-proc envVarCheck(pkg: string, debug: bool) =
+proc setVars(pkg: string, versionDir: string, debug: bool) =
   stowPkgsRoot = getEnv(stowPkgsRootEnvVar)
-  if stowPkgsRoot.len == 0:
+  if stowPkgsRoot == "":
     raise newException(OSError, "Env variable " & stowPkgsRootEnvVar & " is not set")
+  if (not dirExists(stowPkgsRoot)):
+    raise newException(OSError, stowPkgsRootEnvVar & " directory `" & stowPkgsRoot & "' does not exist")
+  installDir = stowPkgsRoot / pkg / versionDir
+  if debug: echo "install dir = " & installDir
+
   if pkg == "tmux":
     stowPkgsTarget = getEnv(stowPkgsTargetEnvVar)
-    if stowPkgsTarget.len == 0:
+    if stowPkgsTarget == "":
       raise newException(OSError, "Env variable " & stowPkgsTargetEnvVar & " is not set")
 
 proc gitOps(rev: string, revBase: string, debug: bool) =
@@ -60,13 +65,6 @@ proc wait(seconds: int=5, debug: bool) =
     if cnt > 0:
       cursorUp(stdout); eraseLine(stdout) #similar to printf"\\r" in bash
 
-proc setInstallDir(pkg: string, versionDir: string, debug: bool) =
-  if dirExists(stowPkgsRoot):
-    installDir = stowPkgsRoot / pkg / versionDir
-    if debug: echo "install dir = " & installDir
-  else:
-    raise newException(OSError, stowPkgsRootEnvVar & " directory `" & stowPkgsRoot & "' does not exist")
-
 proc make(pkg: string, debug: bool) =
   ## Make
   if debug: echo "make"
@@ -79,11 +77,10 @@ proc make(pkg: string, debug: bool) =
   # TODO: Get pkg-specific configure values from a separate config file,
   # preferably TOML.
   if pkg == "tmux":
-    if dirExists(stowPkgsTarget):
-      putEnv("CFLAGS", fmt"-fgnu89-inline -I{stowPkgsTarget}/include -I{stowPkgsTarget}/include/ncursesw")
-      putEnv("LDFLAGS", fmt"-L{stowPkgsTarget}/lib")
-    else:
+    if (not dirExists(stowPkgsTarget)):
       raise newException(OSError, stowPkgsTargetEnvVar & " directory `" & stowPkgsTarget & "' does not exist")
+    putEnv("CFLAGS", fmt"-fgnu89-inline -I{stowPkgsTarget}/include -I{stowPkgsTarget}/include/ncursesw")
+    putEnv("LDFLAGS", fmt"-L{stowPkgsTarget}/lib")
 
   execShellCmdSafe("."/"configure --prefix=" & installDir)
   execShellCmdSafe("make")
@@ -107,17 +104,16 @@ proc nbuild(pkg: string
             , keep: bool=false
             , debug: bool=false) =
   ##NBuild: General purpose build script
-  var revBase = rev.splitPath[1] #similar to basename in bash
+  let revBase = rev.splitPath[1] #similar to basename in bash
   if debug: echo rev
-  if debug: echo rev_base
+  if debug: echo revBase
 
   try:
-    envVarCheck(pkg, debug)
+    setVars(pkg, revBase, debug)
     if (not GitSkip):
       gitOps(rev, revBase, debug)
     if (not WaitSkip):
       wait(debug=debug)
-    setInstallDir(pkg, revBase, debug)
     make(pkg, debug)
     if (not InstallSkip):
       makeInstall(pkg, debug)
