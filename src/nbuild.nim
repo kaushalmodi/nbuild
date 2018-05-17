@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 07:49:40 kmodi>
+# Time-stamp: <2018-05-17 07:59:47 kmodi>
 # Generic build script
 
 import os                       #for paramCount, commandLineParams, sleep, fileExists
@@ -15,12 +15,22 @@ const
 
 var
   stowPkgsRoot: string
+  stowPkgsTarget: string
   installDir: string
 
 template execShellCmdSafe(cmd: string) =
   var exitStatus: int = execShellCmd(cmd)
   if exitStatus>0:
     raise newException(ShellCmdError, "Failed to execute " & cmd)
+
+proc envVarCheck(pkg: string, debug: bool) =
+  stowPkgsRoot = getEnv(stowPkgsRootEnvVar)
+  if stowPkgsRoot.len == 0:
+    raise newException(OSError, "Env variable " & stowPkgsRootEnvVar & " is not set")
+  if pkg == "tmux":
+    stowPkgsTarget = getEnv(stowPkgsTargetEnvVar)
+    if stowPkgsTarget.len == 0:
+      raise newException(OSError, "Env variable " & stowPkgsTargetEnvVar & " is not set")
 
 proc gitOps(rev: string, revBase: string, debug: bool) =
   ## Git fetch, checkout and hard reset
@@ -52,9 +62,6 @@ proc wait(seconds: int=5, debug: bool) =
       cursorUp(stdout); eraseLine(stdout) #similar to printf"\\r" in bash
 
 proc setInstallDir(pkg: string, versionDir: string, debug: bool) =
-  stowPkgsRoot = getEnv(stowPkgsRootEnvVar)
-  if stowPkgsRoot.len == 0:
-    raise newException(OSError, "Env variable " & stowPkgsRootEnvVar & " is not set")
   if dirExists(stowPkgsRoot):
     installDir = stowPkgsRoot / pkg / versionDir
     if debug: echo "install dir = " & installDir
@@ -73,9 +80,6 @@ proc make(pkg: string, debug: bool) =
   # TODO: Get pkg-specific configure values from a separate config file,
   # preferable TOML.
   if pkg=="tmux":
-    var stowPkgsTarget = getEnv(stowPkgsTargetEnvVar)
-    if stowPkgsTarget.len == 0:
-      raise newException(OSError, "Env variable " & stowPkgsTargetEnvVar & " is not set")
     if dirExists(stowPkgsTarget):
       putEnv("CFLAGS", fmt"-fgnu89-inline -I{stowPkgsTarget}/include -I{stowPkgsTarget}/include/ncursesw")
       putEnv("LDFLAGS", fmt"-L{stowPkgsTarget}/lib")
@@ -110,6 +114,7 @@ proc nbuild(pkg: string
   if debug: echo rev_base
 
   try:
+    envVarCheck(pkg, debug)
     if (not GitSkip):
       gitOps(rev, revBase, debug)
     if (not WaitSkip):
