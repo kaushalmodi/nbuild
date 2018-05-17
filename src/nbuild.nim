@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 07:35:41 kmodi>
+# Time-stamp: <2018-05-17 07:49:40 kmodi>
 # Generic build script
 
 import os                       #for paramCount, commandLineParams, sleep, fileExists
@@ -9,11 +9,12 @@ import terminal                 #for eraseLine
 type
   ShellCmdError* = object of Exception
 
-let
-  STOW_PKGS_ROOT: string = getEnv("STOW_PKGS_ROOT")
-  STOW_PKGS_TARGET: string = getEnv("STOW_PKGS_TARGET")
+const
+  stowPkgsRootEnvVar = "STOW_PKGS_ROOT"
+  stowPkgsTargetEnvVar = "STOW_PKGS_TARGET"
 
 var
+  stowPkgsRoot: string
   installDir: string
 
 template execShellCmdSafe(cmd: string) =
@@ -51,11 +52,14 @@ proc wait(seconds: int=5, debug: bool) =
       cursorUp(stdout); eraseLine(stdout) #similar to printf"\\r" in bash
 
 proc setInstallDir(pkg: string, versionDir: string, debug: bool) =
-  if dirExists(STOW_PKGS_ROOT):
-    installDir = STOW_PKGS_ROOT / pkg / versionDir
+  stowPkgsRoot = getEnv(stowPkgsRootEnvVar)
+  if stowPkgsRoot.len == 0:
+    raise newException(OSError, "Env variable " & stowPkgsRootEnvVar & " is not set")
+  if dirExists(stowPkgsRoot):
+    installDir = stowPkgsRoot / pkg / versionDir
     if debug: echo "install dir = " & installDir
   else:
-    raise newException(OSError, "Directory " & STOW_PKGS_ROOT & " does not exist")
+    raise newException(OSError, stowPkgsRootEnvVar & " directory `" & stowPkgsRoot & "' does not exist")
 
 proc make(pkg: string, debug: bool) =
   ## Make
@@ -69,11 +73,14 @@ proc make(pkg: string, debug: bool) =
   # TODO: Get pkg-specific configure values from a separate config file,
   # preferable TOML.
   if pkg=="tmux":
-    if dirExists(STOW_PKGS_TARGET):
-      putEnv("CFLAGS", fmt"-fgnu89-inline -I{STOW_PKGS_TARGET}/include -I{STOW_PKGS_TARGET}/include/ncursesw")
-      putEnv("LDFLAGS", fmt"-L{STOW_PKGS_TARGET}/lib")
+    var stowPkgsTarget = getEnv(stowPkgsTargetEnvVar)
+    if stowPkgsTarget.len == 0:
+      raise newException(OSError, "Env variable " & stowPkgsTargetEnvVar & " is not set")
+    if dirExists(stowPkgsTarget):
+      putEnv("CFLAGS", fmt"-fgnu89-inline -I{stowPkgsTarget}/include -I{stowPkgsTarget}/include/ncursesw")
+      putEnv("LDFLAGS", fmt"-L{stowPkgsTarget}/lib")
     else:
-      raise newException(OSError, "Directory " & STOW_PKGS_TARGET & " does not exist")
+      raise newException(OSError, stowPkgsTargetEnvVar & " directory `" & stowPkgsTarget & "' does not exist")
 
   execShellCmdSafe("."/"configure --prefix=" & installDir)
   execShellCmdSafe("make")
