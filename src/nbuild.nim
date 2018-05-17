@@ -1,4 +1,5 @@
-# Time-stamp: <2018-05-17 11:09:29 kmodi>
+
+# Time-stamp: <2018-05-17 14:25:30 kmodi>
 # Generic build script
 
 # It would be simple to just do:
@@ -9,10 +10,11 @@
 # But I am still doing the below here so that so that I realize the number of
 # procs that I am using, and also where they come from.
 from os import paramCount, commandLineParams, sleep, fileExists, dirExists, createDir, execShellCmd
-from ospaths import getEnv, putEnv, `/`, splitPath
+from ospaths import getEnv, putEnv, `/`, splitPath, getConfigDir
 from strformat import fmt
 from terminal import cursorUp, eraseLine
 # import os, strformat, terminal # Concise way to do the above
+import parsetoml, tables
 
 # Custom exception: https://forum.nim-lang.org/t/2863/1#17817
 type
@@ -20,11 +22,13 @@ type
 
 const
   stowPkgsRootEnvVar = "STOW_PKGS_ROOT"
-  stowPkgsTargetEnvVar = "STOW_PKGS_TARGET"
+
+let
+  configFile = getConfigDir() / "nbuild" / "config.toml" # ~/.config/nbuild/config.toml
+  cfg = parsetoml.parseFile(configFile)
 
 var
   stowPkgsRoot: string
-  stowPkgsTarget: string
   installDir: string
 
 template execShellCmdSafe(cmd: string) =
@@ -33,6 +37,15 @@ template execShellCmdSafe(cmd: string) =
     raise newException(ShellCmdError, "Failed to execute " & cmd)
 
 proc setVars(pkg: string, versionDir: string, debug: bool) =
+  # https://devdocs.io/nim/strformat#fmt.t,string
+  # Need to put escape sequences like \n as below inside fmt: {'\n'}
+  if debug:
+    echo fmt"nbuild config ({configFile}):"
+    parsetoml.dump(cfg)
+    echo fmt"hasKey({pkg}): {cfg.hasKey(pkg)}"
+    for key, val in pairs(cfg):
+      echo "key = ", key
+
   stowPkgsRoot = getEnv(stowPkgsRootEnvVar)
   if stowPkgsRoot == "":
     raise newException(OSError, "Env variable " & stowPkgsRootEnvVar & " is not set")
@@ -41,10 +54,18 @@ proc setVars(pkg: string, versionDir: string, debug: bool) =
   installDir = stowPkgsRoot / pkg / versionDir
   if debug: echo "install dir = " & installDir
 
-  if pkg == "tmux":
-    stowPkgsTarget = getEnv(stowPkgsTargetEnvVar)
-    if stowPkgsTarget == "":
-      raise newException(OSError, "Env variable " & stowPkgsTargetEnvVar & " is not set")
+  if cfg.hasKey(pkg):
+    var dirEnvVars: seq[string]
+    try:
+      dirEnvVars = cfg.getStringArray(fmt"{pkg}.dir_env_vars")
+      for dirEnvVar in dirEnvVars:
+        let dir = getEnv(dirEnvVar)
+        if dir == "":
+          raise newException(OSError, "Env variable " & dirEnvVar & " is not set")
+        if (not dirExists(dir)):
+          raise newException(OSError, dirEnvVar & " directory `" & dir & "' does not exist")
+    except KeyError:            #Ignore "key not found" errors
+      discard
 
 proc gitOps(rev: string, revBase: string, debug: bool) =
   ## Git fetch, checkout and hard reset
@@ -80,11 +101,10 @@ proc make(pkg: string, debug: bool) =
   # Wed May 16 22:49:48 EDT 2018 - kmodi
   # TODO: Get pkg-specific configure values from a separate config file,
   # preferably TOML.
+  # https://github.com/ziotom78/parsetoml
   if pkg == "tmux":
-    if (not dirExists(stowPkgsTarget)):
-      raise newException(OSError, stowPkgsTargetEnvVar & " directory `" & stowPkgsTarget & "' does not exist")
-    putEnv("CFLAGS", fmt"-fgnu89-inline -I{stowPkgsTarget}/include -I{stowPkgsTarget}/include/ncursesw")
-    putEnv("LDFLAGS", fmt"-L{stowPkgsTarget}/lib")
+    putEnv("CFLAGS", "-fgnu89-inline -I${STOW_PKGS_TARGET}/include -I${STOW_PKGS_TARGET}/include/ncursesw")
+    putEnv("LDFLAGS", "-L${STOW_PKGS_TARGET}/lib")
 
   execShellCmdSafe("."/"configure --prefix=" & installDir)
   execShellCmdSafe("make")
