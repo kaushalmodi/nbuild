@@ -122,7 +122,7 @@ proc nbuild(pkg: string
   ##NBuild: General purpose build script
   let
     revBase = rev.splitPath[1] #similar to basename in bash
-    cwdIsGitRepo = existsDir("."/".git")
+    cwdIsGitRepo = dirExists("."/".git")
 
   if debug:
     echo "rev = ", rev
