@@ -1,0 +1,6 @@
+#+title: nbuild
+
+This is a highly experimental build wrapper utility written in Nim (ported from
+a bash script).
+
+[[https://github.com/kaushalmodi/dotfiles/blob/master/nbuild/nbuild/config.toml][Example ~config.toml~ for ~nbuild~]]
