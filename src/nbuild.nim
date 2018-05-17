@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 15:07:33 kmodi>
+# Time-stamp: <2018-05-17 15:24:29 kmodi>
 # Generic build script
 
 import os, strformat, terminal, parsetoml, tables
@@ -77,11 +77,17 @@ proc wait(limit: int=5, debug: bool) =
 
 proc make(pkg: string, debug: bool) =
   ## Make
-  if fileExists("."/"Makefile"): #https://devdocs.io/nim/ospaths#/,string,string
   if debug: echo "-> [DBG] Entering make"
+  let
+    makeFile = "."/"Makefile"   #https://devdocs.io/nim/ospaths#/,string,string
+    autogenFile = "."/"autogen.sh"
+    configureFile = "."/"configure"
+
+  if fileExists(makeFile):
     execShellCmdSafe("make clean")
-  echo "Running autogen.sh .."
-  execShellCmdSafe("."/"autogen.sh")
+  if fileExists(autogenFile):
+    echo "Running autogen.sh .."
+    execShellCmdSafe(autogenFile)
 
   if cfg.hasKey(pkg):
     block setCflagsMaybe:
@@ -97,7 +103,11 @@ proc make(pkg: string, debug: bool) =
       except KeyError:            #Ignore "key not found" errors
         discard
 
+  if (not fileExists(configureFile)):
+    raise newException(OSError, configureFile & " does not exist")
   execShellCmdSafe("."/"configure --prefix=" & installDir)
+  if (not fileExists(makeFile)):
+    raise newException(OSError, makeFile & " does not exist")
   execShellCmdSafe("make")
 
 proc makeInstall(pkg: string, debug: bool) =
