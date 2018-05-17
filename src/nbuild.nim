@@ -1,5 +1,5 @@
 
-# Time-stamp: <2018-05-17 14:29:40 kmodi>
+# Time-stamp: <2018-05-17 14:32:35 kmodi>
 # Generic build script
 
 # It would be simple to just do:
@@ -97,13 +97,19 @@ proc make(pkg: string, debug: bool) =
   echo "Running autogen.sh .."
   execShellCmdSafe("."/"autogen.sh")
 
-  # Wed May 16 22:49:48 EDT 2018 - kmodi
-  # TODO: Get pkg-specific configure values from a separate config file,
-  # preferably TOML.
-  # https://github.com/ziotom78/parsetoml
-  if pkg == "tmux":
-    putEnv("CFLAGS", "-fgnu89-inline -I${STOW_PKGS_TARGET}/include -I${STOW_PKGS_TARGET}/include/ncursesw")
-    putEnv("LDFLAGS", "-L${STOW_PKGS_TARGET}/lib")
+  if cfg.hasKey(pkg):
+    block setCflagsMaybe:
+      try:
+        let envVarValue = cfg.getString(fmt"{pkg}.set_env_vars.CFLAGS")
+        putEnv("CFLAGS", envVarValue)
+      except KeyError:            #Ignore "key not found" errors
+        discard
+    block setLdflagsMaybe:
+      try:
+        let envVarValue = cfg.getString(fmt"{pkg}.set_env_vars.LDFLAGS")
+        putEnv("LDFLAGS", envVarValue)
+      except KeyError:            #Ignore "key not found" errors
+        discard
 
   execShellCmdSafe("."/"configure --prefix=" & installDir)
   execShellCmdSafe("make")
