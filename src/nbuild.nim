@@ -1,4 +1,4 @@
-# Time-stamp: <2018-05-17 15:59:59 kmodi>
+# Time-stamp: <2018-10-19 16:05:24 kmodi>
 # Generic build script
 
 import os, strformat, terminal, parsetoml, tables
@@ -12,7 +12,7 @@ const
 
 let
   configFile = getConfigDir() / "nbuild" / "config.toml" # ~/.config/nbuild/config.toml
-  cfg = parsetoml.parseFile(configFile)
+  cfg = parsetoml.parseFile(configFile).getTable()
 
 var
   stowPkgsRoot: string
@@ -42,9 +42,11 @@ proc setVars(pkg: string, versionDir: string, debug: bool) =
 
   if cfg.hasKey(pkg):
     try:
-      let dirEnvVars = cfg.getStringArray(fmt"{pkg}.dir_env_vars")
-      for dirEnvVar in dirEnvVars:
-        let dir = getEnv(dirEnvVar)
+      let dirEnvVarsTomlValueRef = cfg[pkg]["dir_env_vars"].getElems()
+      for dirEnvVarTomlValueRef in dirEnvVarsTomlValueRef:
+        let
+          dirEnvVar = dirEnvVarTomlValueRef.getStr()
+          dir = getEnv(dirEnvVar)
         if dir == "":
           raise newException(OSError, "Env variable " & dirEnvVar & " is not set")
         if (not dirExists(dir)):
@@ -92,13 +94,13 @@ proc make(pkg: string, debug: bool) =
   if cfg.hasKey(pkg):
     block setCflagsMaybe:
       try:
-        let envVarValue = cfg.getString(fmt"{pkg}.set_env_vars.CFLAGS")
+        let envVarValue = cfg[pkg]["set_env_vars"]["CFLAGS"].getStr()
         putEnv("CFLAGS", envVarValue)
       except KeyError:            #Ignore "key not found" errors
         discard
     block setLdflagsMaybe:
       try:
-        let envVarValue = cfg.getString(fmt"{pkg}.set_env_vars.LDFLAGS")
+        let envVarValue = cfg[pkg]["set_env_vars"]["LDFLAGS"].getStr()
         putEnv("LDFLAGS", envVarValue)
       except KeyError:            #Ignore "key not found" errors
         discard
