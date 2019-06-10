@@ -9,4 +9,4 @@ bin           = @["nbuild"]
 
 # Dependencies
 
-requires "nim >= 0.19.0", "cligen >= 0.9.11", "parsetoml#head"
+requires "nim >= 0.19.0", "cligen >= 0.9.31", "parsetoml >= 0.5.0"
